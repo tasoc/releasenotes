@@ -14,6 +14,9 @@ import os
 import matplotlib.pyplot as plt
 
 import matplotlib as mpl
+import matplotlib.colors as colors
+from matplotlib import cm
+import matplotlib.cm as cmx
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter,ScalarFormatter
 y_formatter = ScalarFormatter(useOffset=False)
 mpl.rcParams['font.family'] = 'serif'
@@ -24,6 +27,10 @@ from astropy.coordinates import SkyCoord
 import scipy.interpolate as INT
 import astropy.io.fits as fits
 from statsmodels.nonparametric.kde import KDEUnivariate as KDE
+
+#from pywcsgrid2.allsky_axes import make_allsky_axes_from_header, allsky_header
+#import matplotlib.patheffects
+#import pywcsgrid2.healpix_helper as healpix_helper
 
 from scipy.stats import binned_statistic as binning
 plt.ioff()
@@ -113,26 +120,28 @@ def phot_noise(Tmag, Teff, cad, PARAM, verbose=False, sysnoise=60):
 	noise_vals = np.array([shot_noise, zodiacal_noise, read_noise, systematic_noise_ppm])
 	return noise_vals, PARAM # ppm per cadence
     
+# =============================================================================
+# 
+# =============================================================================
 
-def compute_onehour_rms(time, flux):
+def compute_onehour_rms(flux, cad):
+	
+	if cad==120:
+		N=30
+	elif cad==1800:
+		N=2
+	else:
+		N=1		
 
-	cad = int(np.nanmedian((np.diff(time)))*(60*60*24))
-	
-	D = np.array([cad-120, cad-1800, cad-20])
-	Da = np.abs(D)
-	
-	Ns = np.array([30, 2, 1])
-	N = Ns[np.argmin(Da)]
+	bins = int(np.ceil(len(flux)/N)) + 1
 		
-	bins = int(np.ceil(len(time)/N)) + 1
-		
-	idx_finite = np.isfinite(flux) & np.isfinite(time)
+	idx_finite = np.isfinite(flux)
 	
+
 	flux_finite = flux[idx_finite]
 	bin_means = np.array([])
 	ii = 0;
 	
-	print(N)
 	for ii in range(bins):
 		try:
 			m = np.nanmean(flux_finite[ii*N:(ii+1)*N])
@@ -140,26 +149,12 @@ def compute_onehour_rms(time, flux):
 		except:
 			continue		
 		
-#	print(bin_means)	
-#	bin_means, bin_edges, _ = binning(time[idx_finite], flux[idx_finite], statistic='mean', bins=bins)
-#	bin_width = (bin_edges[1] - bin_edges[0])
-#	bin_centers = bin_edges[1:] - bin_width/2
-##	
-#	dd = (np.median(np.diff(bin_centers))*60*60*24)
-	
-#		plt.figure()
-##		plt.plot(bin_centers, bin_means)
-#		plt.plot(bin_means)
-#		plt.show()
-	
+
+	# Compute robust RMS value (MAD scaled to RMS)
 	RMS = 1.4826*np.nanmedian(np.abs((bin_means - np.nanmedian(bin_means))))
-	
-	print(RMS)
-#	square_diffs = np.abs((bin_means - np.nanmedian(bin_means)))**2
-##	RMS = np.sqrt(np.nansum(() / len(bin_means))
-#	RMS = np.sqrt(np.nanmedian(square_diffs))
-	
-	return RMS
+	PTP = np.nanmedian(np.abs(np.diff(flux_finite)))
+
+	return RMS, PTP
 
 
 # =============================================================================
@@ -169,54 +164,87 @@ def compute_onehour_rms(time, flux):
 
 def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
+	norm = colors.Normalize(vmin=0, vmax=len(data_paths)-1)
+	scalarMap = cmx.ScalarMappable(norm=norm, cmap=plt.get_cmap('tab10') )
+	
+	
+	fig = plt.figure(figsize=(15,5))
+	fig.subplots_adjust(left=0.06, wspace=0.3, top=0.945, bottom=0.145, right=0.975)
+	ax = fig.add_subplot(121)
+	ax2 = fig.add_subplot(122)
 	
 	PARAM = {}
 	
 	# Add data values	
-	files = np.array([])
-	for d in data_paths:
-		files = np.append(files, np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')]))
-	files = files.flatten()
+#	files = np.array([])
+#	files = files.flatten()
 	
-	rms_tmag_vals = np.zeros([len(files), 3])
-	for i, f in enumerate(files):
-		hdu = fits.open(f)
-		tmag = hdu[0].header['TESSMAG']
-		time = hdu[1].data['TIME']
-		flux = hdu[1].data['FLUX_CORR']
+#	cols = np.array(['r', 'b', 'c', 'g', 'm'])
+	
+	for k, d in enumerate(data_paths):
+#		files = np.append(files, np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')]))
+		files = np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')])
 		
-		dt = np.nanmedian(np.diff(time))
-#		flux = hdu[1].data['FLUX_RAW']
-#		Q = hdu[1].data['QUALITY']
-#		rms = compute_onehour_rms(time[(Q==0)], flux[(Q==0)])
-		
-		rms = compute_onehour_rms(time, flux)
-		
-		rms_tmag_vals[i, 0] = tmag
-		
-		if int(round(dt))==120:
-			rms_tmag_vals[i, 1] = rms
-		else:
-			rms_tmag_vals[i, 2] = rms
+		print(k, d)
+#		if k==0:
+#			tot_rms_tmag_vals = np.zeros([len(files), 6])
+			
+		rms_tmag_vals = np.zeros([len(files), 5])
+		for i, f in enumerate(files):
+			hdu = fits.open(f)
+			tmag = hdu[0].header['TESSMAG']
+			flux = hdu[1].data['FLUX_CORR']
+			
+			rms_tmag_vals[i, 0] = tmag
+			
+#			if k==0:
+#				tot_rms_tmag_vals[i, 0] = tmag
+			
 
-		
-		# TODO: Update elat+elon based on observing sector?
-		PARAM['RA']=hdu[0].header['RA_OBJ']
-		PARAM['DEC']=hdu[0].header['DEC_OBJ']
+			if hdu[1].header.get('NUM_FRM',60)==60:
+				rms, ptp = compute_onehour_rms(flux, 120)
+				rms_tmag_vals[i, 1] = rms
+				rms_tmag_vals[i, 3] = ptp
+				
+#				tot_rms_tmag_vals[i,k+1] = rms
+#				tot_rms_tmag_vals[i,k+1] = np.nanmedian(np.diff(flux))
+			else:
+				rms, ptp = compute_onehour_rms(flux, 1800)
+				rms_tmag_vals[i, 2] = rms
+				rms_tmag_vals[i, 4] = ptp
 
+			
+			# TODO: Update elat+elon based on observing sector?
+			PARAM['RA']=hdu[0].header['RA_OBJ']
+			PARAM['DEC']=hdu[0].header['DEC_OBJ']
 	
-	idx_sc = np.nonzero(rms_tmag_vals[:, 1])
-	idx_lc = np.nonzero(rms_tmag_vals[:, 2])
-	
-	ax.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 1], marker='o', facecolors='None', color='k')
-	ax.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 2], marker='o', facecolors='None', color='r')
+		
+		idx_sc = np.nonzero(rms_tmag_vals[:, 1])
+		idx_lc = np.nonzero(rms_tmag_vals[:, 2])
+		
+		rgba_color = scalarMap.to_rgba(k)
+#		rgba_color = cols[k]
+		
+		ax.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 1], marker='o', facecolors='None', edgecolor=rgba_color)
+		ax.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 2], marker='s', facecolors='None', edgecolor=rgba_color)
+		
+		ax2.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 3], marker='o', facecolors='None', edgecolor=rgba_color)
+		ax2.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 4], marker='s', facecolors='None', edgecolor=rgba_color)
 	
 	
 	# Plot theoretical lines
 	mags = np.linspace(3.5, 16.5, 50)
 	vals = np.zeros([len(mags), 4])
+	vals2 = np.zeros([len(mags), 4])
+	
+#	print(tot_rms_tmag_vals)
+	
+#	plt.figure()
+#	plt.scatter(tot_rms_tmag_vals[:, 0], tot_rms_tmag_vals[:, 1] - tot_rms_tmag_vals[:, 3], facecolors='r', marker='+', color='r')
+#	plt.scatter(tot_rms_tmag_vals[:, 0], tot_rms_tmag_vals[:, 2] - tot_rms_tmag_vals[:, 3], facecolors='b', marker='+', color='b')
+#	plt.scatter(tot_rms_tmag_vals[:, 0], tot_rms_tmag_vals[:, 4] - tot_rms_tmag_vals[:, 3], facecolors='g', marker='+', color='g')
+#	plt.scatter(tot_rms_tmag_vals[:, 0], tot_rms_tmag_vals[:, 5] - tot_rms_tmag_vals[:, 3], facecolors='m', marker='+', color='m')
+	
 	
     
 	for i in range(len(mags)):
@@ -230,8 +258,19 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax.axhline(y=sysnoise, color='b', ls='--') 
 	
 	
+	for i in range(len(mags)):
+		vals2[i,:], _ = phot_noise(mags[i], 5775, 120, PARAM, sysnoise=sysnoise, verbose=False)    
+        
+	
+	ax2.semilogy(mags, vals2[:, 0], 'r-')   
+	ax2.semilogy(mags, vals2[:, 1], 'g--')   
+	ax2.semilogy(mags, vals2[:, 2], '-')   
+	ax2.semilogy(mags, np.sqrt(np.sum(vals2**2, axis=1)), 'k-')   
+	
+	
 	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim([10, 1e5])  
+	
 	
 	ax.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
 	ax.set_ylabel(r'$\rm RMS\,\, (ppm\,\, hr^{-1})$', fontsize=16, labelpad=10)
@@ -240,7 +279,22 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.tick_params(direction='out', which='both', pad=5, length=3) 
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15') 
-	plt.tight_layout()
+	
+	
+	###########
+	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
+	ax2.set_ylabel(r'$\rm point-to-point MDV\,\, (ppm)$', fontsize=16, labelpad=10)
+	
+	ax2.set_xlim([3.5, 16.5])
+	
+	ax2.set_yscale("log", nonposy='clip')
+	ax2.xaxis.set_major_locator(MultipleLocator(2))
+	ax2.xaxis.set_minor_locator(MultipleLocator(1))
+	ax2.tick_params(direction='out', which='both', pad=5, length=3) 
+	ax2.tick_params(which='major', pad=6, length=5,labelsize='15') 
+	
+	
+#	plt.tight_layout()
 	
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
@@ -374,7 +428,108 @@ def plot_mag_dist(data_path, sector):
 	
 	plt.show()
 	
-	
+
+# =============================================================================
+# 
+# =============================================================================
+
+#def do_allsky(ax, coord):
+#	
+#    gh_gal = ax[coord].get_grid_helper()
+#
+#    for d in range(0, 361, 30):
+#        axis = gh_gal.new_floating_axis(nth_coord=0, value=d,
+#                                        axes=ax,
+#                                        axis_direction='bottom',
+#                                        allsky=True)
+#        ax.axis["a=%d" % d] = axis
+#        axis.set_ticklabel_direction("-")
+#        axis.set_axislabel_direction("-")
+#        axis.toggle(all=False)
+#        axis.get_helper().set_extremes(-90,90)
+#        axis.line.set_color("0.7")
+#        axis.set_zorder(2.)
+#
+#    gh_gal.locator_params(nbins=9)
+#
+#    axis = gh_gal.new_floating_axis(nth_coord=1, value=0,
+#                                    axes=ax,
+#                                    axis_direction='bottom',
+#                                    allsky=True)
+#    from mpl_toolkits.axisartist.floating_axes import ExtremeFinderFixed
+#
+#    #glon_min, glon_max = -180+0.001, 180
+#    glon_min, glon_max = 0, 360 - 0.001
+#    axis.get_helper().set_extremes(glon_min, glon_max) 
+#    gh_gal.grid_finder.extreme_finder = ExtremeFinderFixed((glon_min, glon_max, -90, 90))
+#
+#    
+#    axis.set_ticklabel_direction("-")
+#    axis.set_axislabel_direction("-")
+#    axis.set_zorder(5.)
+#    axis.toggle(all=False, ticklabels=True)
+#    axis.line.set_linewidth(1.5)
+#    ax.axis["b=0"] = axis
+#
+#    ef = matplotlib.patheffects.withStroke(foreground="w", linewidth=3)
+#    axis.major_ticklabels.set_path_effects([ef])
+#
+#    ax.grid()
+#
+#    ax["gal"].annotate("G.C.", (0,0), xycoords="data",
+#                       xytext=(20, 10), textcoords="offset points",
+#                       ha="left",
+#                       arrowprops=dict(arrowstyle="->"),
+#                       bbox=dict(fc="0.5", ec="none", alpha=0.3))
+#
+#    return ax
+
+
+#def get_LAB_healpix_data():
+#    import pyfits
+#    fname = "LAB_fullvel.fits"
+#    f = pyfits.open(fname)
+#    
+#    #ordering = f[1].header["ordering"]
+#    nside = f[1].header["nside"]
+#    data = f[1].data["temperature"]
+#    
+#    healpix_data = healpix_helper.HealpixData(nside, data.flat,nested=False, flipy=True,coord="gal")
+#
+#    return healpix_data
+
+
+#if 1:
+#    
+#    proj_list = ["CYP", "CEA", "CAR", "MER", "SFL", "PAR", "MOL", ]
+#
+#    DO_HEALPIX = True
+#
+#    if DO_HEALPIX:
+#        healpix_data = get_LAB_healpix_data()
+#    else:
+#        healpix_data = None
+#    
+#    for proj in proj_list:
+#        fig = plt.figure()
+#        rect = 111
+#
+#        coord, lon_center = "fk5", 180
+#        header = allsky_header(coord=coord, proj=proj,
+#                               lon_center=lon_center, cdelt=0.2)
+#        ax = make_allsky_axes_from_header(fig, rect, header, lon_center=lon_center)
+#
+#        ax.set_title("proj = %s" % proj, position=(0.5, 1.1))
+#    
+#        do_allsky(ax, "gal")
+#
+#        if healpix_data is not None:
+#            d = healpix_data.get_projected_map(header)
+#            im = ax.imshow(d**.5, origin="lower", cmap="gist_heat_r")
+#            c1, c2 = im.get_clim()
+#            im.set_clim(c1, c2*0.8)
+#
+#    plt.show()	
 	
 # =============================================================================
 # 
@@ -382,13 +537,15 @@ def plot_mag_dist(data_path, sector):
 
 if __name__ == "__main__":  
 
+#	data_path = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
 	
-	data_path = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TDA5/'
+	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TDA5/'
+#	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
+	data_paths = np.array([path0 + '10',])
 	
 	
-	plot_onehour_noise([data_path,], cad = 1800, sector=1, sysnoise=0)
+	plot_onehour_noise(np.array([path0 + '10',]), cad = 1800, sector=1, sysnoise=0)	
+	plot_pixinaperture(path0 + '10', sector=1)	
+	plot_mag_dist(path0 + '10', sector=1)
 	
 	
-	plot_pixinaperture(data_path, sector=1)
-	
-	plot_mag_dist(data_path, sector=1)
