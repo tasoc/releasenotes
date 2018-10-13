@@ -183,6 +183,7 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	for k, d in enumerate(data_paths):
 #		files = np.append(files, np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')]))
 		files = np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits.gz')])
+<<<<<<< Updated upstream
 
 		print(k, d)
 #		if k==0:
@@ -252,6 +253,9 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 
 		rgba_color = scalarMap.to_rgba(k)
 
+=======
+		
+>>>>>>> Stashed changes
 		ax.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 1], marker='o', facecolors='None', edgecolor=rgba_color)
 		ax.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 2], marker='s', facecolors='None', edgecolor=rgba_color)
 
@@ -262,6 +266,7 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	mags = np.linspace(3.5, 16.5, 50)
 	vals = np.zeros([len(mags), 4])
 	vals2 = np.zeros([len(mags), 4])
+<<<<<<< Updated upstream
 
 #	print(tot_rms_tmag_vals)
 
@@ -318,6 +323,7 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax.set_ylabel(r'$\rm RMS\,\, (ppm\,\, hr^{-1})$', fontsize=16, labelpad=10)
 	ax.xaxis.set_major_locator(MultipleLocator(2))
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
+<<<<<<< Updated upstream
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
 
@@ -336,6 +342,7 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax2.set_yscale("log", nonposy='clip')
 	ax2.xaxis.set_major_locator(MultipleLocator(2))
 	ax2.xaxis.set_minor_locator(MultipleLocator(1))
+<<<<<<< Updated upstream
 	ax2.tick_params(direction='out', which='both', pad=5, length=3)
 	ax2.tick_params(which='major', pad=6, length=5,labelsize='15')
 	ax2.yaxis.set_ticks_position('both')
@@ -365,6 +372,11 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
+=======
+	# Add data values	
+	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
+	
+>>>>>>> Stashed changes
 	ap_tmag_vals = np.zeros([len(files), 2])
 	for i, f in enumerate(files):
 		hdu = fits.open(f)
@@ -395,6 +407,7 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.yaxis.set_major_locator(MultipleLocator(20))
 	ax.yaxis.set_minor_locator(MultipleLocator(10))
+<<<<<<< Updated upstream
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
 	ax.yaxis.set_ticks_position('both')
@@ -420,6 +433,11 @@ def plot_mag_dist(data_path, sector):
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
+=======
+	# Add data values	
+	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
+	
+>>>>>>> Stashed changes
 	tmag_vals_sc = np.array([])
 	tmag_vals_lc = np.array([])
 	for i, f in enumerate(files):
@@ -441,6 +459,7 @@ def plot_mag_dist(data_path, sector):
 	if len(tmag_vals_lc) > 0:
 		kde_lc = KDE(tmag_vals_lc)
 		kde_lc.fit(gridsize=1000)
+<<<<<<< Updated upstream
 		ax.fill_between(kde_lc.support, 0, kde_lc.density*len(tmag_vals_lc), color='b', alpha=0.3, label='1800s')
 		ax.scatter(tmag_vals_lc, np.zeros_like(tmag_vals_lc), lw=1, marker='|', c='k', s=80)
 
@@ -455,6 +474,22 @@ def plot_mag_dist(data_path, sector):
 	kde_all.fit(gridsize=1000)
 	ax.plot(kde_all.support, kde_all.density*len(tmag_all), 'k-', lw=1.5, label='All')
 
+=======
+		ax.plot(kde_lc.support, kde_lc.density*len(tmag_vals_lc), label='LC')
+		ax.scatter(tmag_vals_lc, np.zeros_like(tmag_vals_lc), lw=1, marker='+', s=80)
+	except:
+		pass
+	
+	
+	try:
+		kde_sc = KDE(tmag_vals_sc)
+		kde_sc.fit(gridsize=1000)
+		ax.plot(kde_sc.support, kde_sc.density*len(tmag_vals_sc), label='SC')
+		ax.scatter(tmag_vals_sc, np.zeros_like(tmag_vals_sc), lw=1, marker='+', s=80)
+	except:
+		pass		
+	
+>>>>>>> Stashed changes
 #	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim(ymin=0)
 	ax.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
@@ -467,9 +502,18 @@ def plot_mag_dist(data_path, sector):
 	plt.tight_layout()
 	ax.legend(frameon=False, prop={'size':12} ,loc='upper right', borderaxespad=0,handlelength=2.5, handletextpad=0.4)
 
+	ax.yaxis.set_ticks_position('both')
+
+>>>>>>> Stashed changes
+
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
+<<<<<<< Updated upstream
+=======
+	fig.savefig(os.path.join(save_path, 'magnitudes.png') )
+	
+>>>>>>> Stashed changes
 
 	fig.savefig(os.path.join(save_path, 'magnitudes.png'), bb_inches='tight')
 	plt.show()
@@ -592,3 +636,17 @@ if __name__ == "__main__":
 	plot_onehour_noise([path0], cad=1800, sector=1, sysnoise=0)
 	plot_pixinaperture(path0, sector=1)
 	plot_mag_dist(path0, sector=1)
+=======
+#	data_path = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
+	
+	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TDA5/S01_DR00_v01'
+#	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
+#	data_paths = np.array([path0 + '10',])
+	
+	
+	plot_onehour_noise(np.array([path0,]), cad = 1800, sector=1, sysnoise=0)	
+	plot_pixinaperture(path0, sector=1)	
+	plot_mag_dist(path0, sector=1)
+	
+	
+>>>>>>> Stashed changes
