@@ -14,7 +14,6 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as colors
-from matplotlib import cm
 import matplotlib.cm as cmx
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter,ScalarFormatter
 y_formatter = ScalarFormatter(useOffset=False)
@@ -24,13 +23,11 @@ rc('text', usetex=True)
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 import scipy.interpolate as INT
-import astropy.io.fits as fits
+from astropy.io import fits
 from statsmodels.nonparametric.kde import KDEUnivariate as KDE
-
 #from pywcsgrid2.allsky_axes import make_allsky_axes_from_header, allsky_header
 #import matplotlib.patheffects
 #import pywcsgrid2.healpix_helper as healpix_helper
-
 from scipy.stats import binned_statistic as binning
 plt.ioff()
 
@@ -167,10 +164,13 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	scalarMap = cmx.ScalarMappable(norm=norm, cmap=plt.get_cmap('tab10') )
 
 
-	fig = plt.figure(figsize=(15,5))
-	fig.subplots_adjust(left=0.06, wspace=0.3, top=0.945, bottom=0.145, right=0.975)
-	ax = fig.add_subplot(121)
-	ax2 = fig.add_subplot(122)
+	fig = plt.figure()
+	fig.subplots_adjust(left=0.145, wspace=0.3, top=0.945, bottom=0.145, right=0.975)
+	ax = fig.add_subplot(111)
+
+	fig2 = plt.figure()
+	fig2.subplots_adjust(left=0.145, wspace=0.3, top=0.945, bottom=0.145, right=0.975)
+	ax2 = fig2.add_subplot(111)
 
 	PARAM = {}
 
@@ -190,32 +190,30 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 
 		rms_tmag_vals = np.zeros([len(files), 5])
 		for i, f in enumerate(files):
-			hdu = fits.open(f)
-			tmag = hdu[0].header['TESSMAG']
-			flux = hdu[1].data['FLUX_CORR']
+			with fits.open(f) as hdu:
+				tmag = hdu[0].header['TESSMAG']
+				flux = hdu[1].data['FLUX_CORR']
 
-			rms_tmag_vals[i, 0] = tmag
+				rms_tmag_vals[i, 0] = tmag
 
-#			if k==0:
-#				tot_rms_tmag_vals[i, 0] = tmag
+	#			if k==0:
+	#				tot_rms_tmag_vals[i, 0] = tmag
 
+				if hdu[1].header.get('NUM_FRM', 60) == 60:
+					rms, ptp = compute_onehour_rms(flux, 120)
+					rms_tmag_vals[i, 1] = rms
+					rms_tmag_vals[i, 3] = ptp
 
-			if hdu[1].header.get('NUM_FRM', 60) == 60:
-				rms, ptp = compute_onehour_rms(flux, 120)
-				rms_tmag_vals[i, 1] = rms
-				rms_tmag_vals[i, 3] = ptp
+	#				tot_rms_tmag_vals[i,k+1] = rms
+	#				tot_rms_tmag_vals[i,k+1] = np.nanmedian(np.diff(flux))
+				else:
+					rms, ptp = compute_onehour_rms(flux, 1800)
+					rms_tmag_vals[i, 2] = rms
+					rms_tmag_vals[i, 4] = ptp
 
-#				tot_rms_tmag_vals[i,k+1] = rms
-#				tot_rms_tmag_vals[i,k+1] = np.nanmedian(np.diff(flux))
-			else:
-				rms, ptp = compute_onehour_rms(flux, 1800)
-				rms_tmag_vals[i, 2] = rms
-				rms_tmag_vals[i, 4] = ptp
-
-
-			# TODO: Update elat+elon based on observing sector?
-			PARAM['RA'] = hdu[0].header['RA_OBJ']
-			PARAM['DEC'] = hdu[0].header['DEC_OBJ']
+				# TODO: Update elat+elon based on observing sector?
+				PARAM['RA'] = hdu[0].header['RA_OBJ']
+				PARAM['DEC'] = hdu[0].header['DEC_OBJ']
 
 
 		idx_sc = np.nonzero(rms_tmag_vals[:, 1])
@@ -244,11 +242,8 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 #	plt.scatter(tot_rms_tmag_vals[:, 0], tot_rms_tmag_vals[:, 4] - tot_rms_tmag_vals[:, 3], facecolors='g', marker='+', color='g')
 #	plt.scatter(tot_rms_tmag_vals[:, 0], tot_rms_tmag_vals[:, 5] - tot_rms_tmag_vals[:, 3], facecolors='m', marker='+', color='m')
 
-
-
 	for i in range(len(mags)):
 		vals[i,:], _ = phot_noise(mags[i], 5775, cad, PARAM, sysnoise=sysnoise, verbose=False)
-
 
 	ax.semilogy(mags, vals[:, 0], 'r-')
 	ax.semilogy(mags, vals[:, 1], 'g--')
@@ -260,7 +255,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	for i in range(len(mags)):
 		vals2[i,:], _ = phot_noise(mags[i], 5775, 120, PARAM, sysnoise=sysnoise, verbose=False)
 
-
 	ax2.semilogy(mags, vals2[:, 0], 'r-')
 	ax2.semilogy(mags, vals2[:, 1], 'g--')
 	ax2.semilogy(mags, vals2[:, 2], '-')
@@ -269,23 +263,17 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 
 	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim([10, 1e5])
-
-
 	ax.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
 	ax.set_ylabel(r'$\rm RMS\,\, (ppm\,\, hr^{-1})$', fontsize=16, labelpad=10)
-
 	ax.xaxis.set_major_locator(MultipleLocator(2))
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
 
-
 	###########
 	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
-	ax2.set_ylabel(r'point-to-point MDV (ppm)', fontsize=16, labelpad=10)
-
+	ax2.set_ylabel('point-to-point MDV (ppm)', fontsize=16, labelpad=10)
 	ax2.set_xlim([3.5, 16.5])
-
 	ax2.set_yscale("log", nonposy='clip')
 	ax2.xaxis.set_major_locator(MultipleLocator(2))
 	ax2.xaxis.set_minor_locator(MultipleLocator(1))
@@ -298,7 +286,8 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
-	fig.savefig(os.path.join(save_path, 'rms_noise.png') )
+	fig.savefig(os.path.join(save_path, 'rms_noise.png'), bb_inches='tight')
+	fig2.savefig(os.path.join(save_path, 'mvd_noise.png'), bb_inches='tight')
 
 	plt.show()
 
@@ -352,7 +341,7 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
-	fig.savefig(os.path.join(save_path, 'pix_in_aperture.png') )
+	fig.savefig(os.path.join(save_path, 'pix_in_aperture.png'), bb_inches='tight')
 
 	plt.show()
 
@@ -418,10 +407,9 @@ def plot_mag_dist(data_path, sector):
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
-	fig.savefig(os.path.join(save_path, 'magnitudes.png') )
 
 	ax.legend(frameon=False, prop={'size':12} ,loc='upper right', borderaxespad=0,handlelength=2.5, handletextpad=0.4)
-
+	fig.savefig(os.path.join(save_path, 'magnitudes.png'), bb_inches='tight')
 
 	plt.show()
 
