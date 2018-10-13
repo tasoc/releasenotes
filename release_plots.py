@@ -183,7 +183,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	for k, d in enumerate(data_paths):
 #		files = np.append(files, np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')]))
 		files = np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits.gz')])
-<<<<<<< Updated upstream
 
 		print(k, d)
 #		if k==0:
@@ -216,28 +215,25 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 				PARAM['RA'] = hdu[0].header['RA_OBJ']
 				PARAM['DEC'] = hdu[0].header['DEC_OBJ']
 
-
-=======
-		
 		print(k, d)
 #		if k==0:
 #			tot_rms_tmag_vals = np.zeros([len(files), 6])
-			
+
 		rms_tmag_vals = np.zeros([len(files), 6])
 		for i, f in enumerate(files):
 			hdu = fits.open(f)
 			tmag = hdu[0].header['TESSMAG']
 			flux = hdu[1].data['FLUX_CORR']
-			
+
 			rms_tmag_vals[i, 0] = tmag
 			rms_tmag_vals[i, -1] = hdu[0].header['TICID']
-					
+
 
 			if hdu[1].header.get('NUM_FRM',60)==60:
 				rms, ptp = compute_onehour_rms(flux, 120)
 				rms_tmag_vals[i, 1] = rms
 				rms_tmag_vals[i, 3] = ptp
-				
+
 #				tot_rms_tmag_vals[i,k+1] = rms
 #				tot_rms_tmag_vals[i,k+1] = np.nanmedian(np.diff(flux))
 			else:
@@ -245,35 +241,27 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 				rms_tmag_vals[i, 2] = rms
 				rms_tmag_vals[i, 4] = ptp
 
-			
+
 			# TODO: Update elat+elon based on observing sector?
 			PARAM['RA']=hdu[0].header['RA_OBJ']
 			PARAM['DEC']=hdu[0].header['DEC_OBJ']
-	
-		
->>>>>>> Stashed changes
+
+
 		idx_sc = np.nonzero(rms_tmag_vals[:, 1])
 		idx_lc = np.nonzero(rms_tmag_vals[:, 2])
 
 		rgba_color = scalarMap.to_rgba(k)
-<<<<<<< Updated upstream
-#		rgba_color = cols[k]
 
-=======
-		
->>>>>>> Stashed changes
 		ax.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 1], marker='o', facecolors='None', edgecolor=rgba_color)
 		ax.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 2], marker='s', facecolors='None', edgecolor=rgba_color)
 
 		ax2.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 3], marker='o', facecolors='None', edgecolor=rgba_color)
 		ax2.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 4], marker='s', facecolors='None', edgecolor=rgba_color)
 
-
 	# Plot theoretical lines
 	mags = np.linspace(3.5, 16.5, 50)
 	vals = np.zeros([len(mags), 4])
 	vals2 = np.zeros([len(mags), 4])
-<<<<<<< Updated upstream
 
 #	print(tot_rms_tmag_vals)
 
@@ -292,7 +280,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax.semilogy(mags, np.sqrt(np.sum(vals**2, axis=1)), 'k-')
 	ax.axhline(y=sysnoise, color='b', ls='--')
 
-
 	for i in range(len(mags)):
 		vals2[i,:], _ = phot_noise(mags[i], 5775, 120, PARAM, sysnoise=sysnoise, verbose=False)
 
@@ -301,77 +288,57 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax2.semilogy(mags, vals2[:, 2], '-')
 	ax2.semilogy(mags, np.sqrt(np.sum(vals2**2, axis=1)), 'k-')
 
-
-=======
-	
-	
-    
 	for i in range(len(mags)):
-		vals[i,:], _ = phot_noise(mags[i], 5775, cad, PARAM, sysnoise=sysnoise, verbose=False)    
+		vals[i,:], _ = phot_noise(mags[i], 5775, cad, PARAM, sysnoise=sysnoise, verbose=False)
 	tot_noise = np.sqrt(np.sum(vals**2, axis=1))
-	
-	
+
 	noi_vs_mag = INT.UnivariateSpline(mags, tot_noise)
 	idx = (rms_tmag_vals[:, 1]/noi_vs_mag(rms_tmag_vals[:, 0]) < 1)
 	print([int(x) for x in rms_tmag_vals[idx, -1]])
 	print([x for x in rms_tmag_vals[idx, 0]])
-	
-	ax.semilogy(mags, vals[:, 0], 'r-')   
-	ax.semilogy(mags, vals[:, 1], 'g--')   
-	ax.semilogy(mags, vals[:, 2], '-')   
-	ax.semilogy(mags, tot_noise, 'k-')   
-	ax.axhline(y=sysnoise, color='b', ls='--') 
-	
-	
+
+	ax.semilogy(mags, vals[:, 0], 'r-')
+	ax.semilogy(mags, vals[:, 1], 'g--')
+	ax.semilogy(mags, vals[:, 2], '-')
+	ax.semilogy(mags, tot_noise, 'k-')
+	ax.axhline(y=sysnoise, color='b', ls='--')
+
 	for i in range(len(mags)):
-		vals2[i,:], _ = phot_noise(mags[i], 5775, 120, PARAM, sysnoise=sysnoise, verbose=False)    
+		vals2[i,:], _ = phot_noise(mags[i], 5775, 120, PARAM, sysnoise=sysnoise, verbose=False)
 	tot_noise2 = np.sqrt(np.sum(vals2**2, axis=1))
-	
-	ax2.semilogy(mags, vals2[:, 0], 'r-')   
-	ax2.semilogy(mags, vals2[:, 1], 'g--')   
-	ax2.semilogy(mags, vals2[:, 2], '-')   
-	ax2.semilogy(mags, tot_noise2, 'k-')   
-	
-	
->>>>>>> Stashed changes
+
+	ax2.semilogy(mags, vals2[:, 0], 'r-')
+	ax2.semilogy(mags, vals2[:, 1], 'g--')
+	ax2.semilogy(mags, vals2[:, 2], '-')
+	ax2.semilogy(mags, tot_noise2, 'k-')
+
 	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim([10, 1e5])
 	ax.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
 	ax.set_ylabel(r'$\rm RMS\,\, (ppm\,\, hr^{-1})$', fontsize=16, labelpad=10)
 	ax.xaxis.set_major_locator(MultipleLocator(2))
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
-<<<<<<< Updated upstream
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
 
 	###########
 	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
 	ax2.set_ylabel('point-to-point MDV (ppm)', fontsize=16, labelpad=10)
-=======
-	ax.tick_params(direction='out', which='both', pad=5, length=3) 
-	ax.tick_params(which='major', pad=6, length=5,labelsize='15') 
-	
+	ax.tick_params(direction='out', which='both', pad=5, length=3)
+	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
+
 	ax.yaxis.set_ticks_position('both')
 
 	###########
 	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
 	ax2.set_ylabel(r'$\rm point-to-point\,\, MDV\,\, (ppm)$', fontsize=16, labelpad=10)
-	
->>>>>>> Stashed changes
 	ax2.set_xlim([3.5, 16.5])
 	ax2.set_yscale("log", nonposy='clip')
 	ax2.xaxis.set_major_locator(MultipleLocator(2))
 	ax2.xaxis.set_minor_locator(MultipleLocator(1))
-<<<<<<< Updated upstream
 	ax2.tick_params(direction='out', which='both', pad=5, length=3)
 	ax2.tick_params(which='major', pad=6, length=5,labelsize='15')
-
-=======
-	ax2.tick_params(direction='out', which='both', pad=5, length=3) 
-	ax2.tick_params(which='major', pad=6, length=5,labelsize='15') 
-	
 	ax2.yaxis.set_ticks_position('both')
->>>>>>> Stashed changes
 
 #	plt.tight_layout()
 
@@ -392,16 +359,12 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 
-<<<<<<< Updated upstream
+	# Add data values
+	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
-=======
-	# Add data values	
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-	
->>>>>>> Stashed changes
 	ap_tmag_vals = np.zeros([len(files), 2])
 	for i, f in enumerate(files):
 		hdu = fits.open(f)
@@ -412,23 +375,15 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 #		print(in_aperture)
 		ap_tmag_vals[i, 0] = tmag
 		ap_tmag_vals[i, 1] = np.sum(in_aperture)
-<<<<<<< Updated upstream
-
-
-=======
-		
 		if np.sum(in_aperture)==15:
 			print(hdu[0].header['TICID'])
-		
-	
->>>>>>> Stashed changes
+
 	# Colour by distance from camera centre
 	ax.scatter(ap_tmag_vals[:, 0], ap_tmag_vals[:, 1], marker='o', facecolors='None', color='k')
 
 	mags = np.linspace(3.5, 16.5, 500)
 	pix = np.asarray([Pixinaperture(m) for m in mags], dtype='float64')
 	ax.plot(mags, pix, color='k', ls='-')
-
 
 	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim([1, 100])
@@ -440,16 +395,9 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.yaxis.set_major_locator(MultipleLocator(20))
 	ax.yaxis.set_minor_locator(MultipleLocator(10))
-<<<<<<< Updated upstream
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
-=======
-	ax.tick_params(direction='out', which='both', pad=5, length=3) 
-	ax.tick_params(which='major', pad=6, length=5,labelsize='15') 
-	
 	ax.yaxis.set_ticks_position('both')
-
->>>>>>> Stashed changes
 	plt.tight_layout()
 
 	save_path = 'plots/sector%02d/' %sector
@@ -466,30 +414,22 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 
 def plot_mag_dist(data_path, sector):
 
-<<<<<<< Updated upstream
+	# Add data values
+	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
-=======
-	# Add data values	
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-	
->>>>>>> Stashed changes
 	tmag_vals_sc = np.array([])
 	tmag_vals_lc = np.array([])
 	for i, f in enumerate(files):
 		hdu = fits.open(f)
 		tmag = hdu[0].header['TESSMAG']
-<<<<<<< Updated upstream
-		time = hdu[1].data['TIME']
+		#time = hdu[1].data['TIME']
 
-		dt = np.nanmedian(np.diff(time))
+		dt = hdu[1].header['TIMEDEL'] * 86400
 
-=======
->>>>>>> Stashed changes
-
-		if hdu[1].header.get('NUM_FRM',60)==60:
+		if dt < 1000:
 			tmag_vals_sc = np.append(tmag_vals_sc, tmag)
 		else:
 			tmag_vals_lc = np.append(tmag_vals_lc, tmag)
@@ -501,7 +441,6 @@ def plot_mag_dist(data_path, sector):
 	if len(tmag_vals_lc) > 0:
 		kde_lc = KDE(tmag_vals_lc)
 		kde_lc.fit(gridsize=1000)
-<<<<<<< Updated upstream
 		ax.fill_between(kde_lc.support, 0, kde_lc.density*len(tmag_vals_lc), color='b', alpha=0.3, label='1800s')
 		ax.scatter(tmag_vals_lc, np.zeros_like(tmag_vals_lc), lw=1, marker='|', c='k', s=80)
 
@@ -516,60 +455,24 @@ def plot_mag_dist(data_path, sector):
 	kde_all.fit(gridsize=1000)
 	ax.plot(kde_all.support, kde_all.density*len(tmag_all), 'k-', lw=1.5, label='All')
 
-=======
-		ax.plot(kde_lc.support, kde_lc.density*len(tmag_vals_lc), label='LC')
-		ax.scatter(tmag_vals_lc, np.zeros_like(tmag_vals_lc), lw=1, marker='+', s=80)
-	except:
-		pass
-	
-	
-	try:
-		kde_sc = KDE(tmag_vals_sc)
-		kde_sc.fit(gridsize=1000)
-		ax.plot(kde_sc.support, kde_sc.density*len(tmag_vals_sc), label='SC')
-		ax.scatter(tmag_vals_sc, np.zeros_like(tmag_vals_sc), lw=1, marker='+', s=80)
-	except:
-		pass		
-	
->>>>>>> Stashed changes
 #	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim(ymin=0)
-
 	ax.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
 	ax.set_ylabel('Number of stars', fontsize=16, labelpad=10)
-<<<<<<< Updated upstream
-
-=======
-	
->>>>>>> Stashed changes
 	ax.xaxis.set_major_locator(MultipleLocator(2))
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
-	plt.tight_layout()
-<<<<<<< Updated upstream
-=======
-	
-	ax.legend(frameon=False, prop={'size':12} ,loc='upper right', borderaxespad=0,handlelength=2.5, handletextpad=0.4) 
-
 	ax.yaxis.set_ticks_position('both')
-
->>>>>>> Stashed changes
+	plt.tight_layout()
+	ax.legend(frameon=False, prop={'size':12} ,loc='upper right', borderaxespad=0,handlelength=2.5, handletextpad=0.4)
 
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
-<<<<<<< Updated upstream
-=======
-	fig.savefig(os.path.join(save_path, 'magnitudes.png') )
-	
->>>>>>> Stashed changes
 
-	ax.legend(frameon=False, prop={'size':12} ,loc='upper right', borderaxespad=0,handlelength=2.5, handletextpad=0.4)
 	fig.savefig(os.path.join(save_path, 'magnitudes.png'), bb_inches='tight')
-
 	plt.show()
-
 
 # =============================================================================
 #
@@ -683,25 +586,9 @@ if __name__ == "__main__":
 
 #	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
 	path0 = r'C:\Users\au195407\Downloads\Ny mappe'
-
-<<<<<<< Updated upstream
 #	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
 	#data_paths = np.array([path0 + '10',]
 
 	plot_onehour_noise([path0], cad=1800, sector=1, sysnoise=0)
 	plot_pixinaperture(path0, sector=1)
 	plot_mag_dist(path0, sector=1)
-=======
-#	data_path = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
-	
-	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TDA5/S01_DR00_v01'
-#	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
-#	data_paths = np.array([path0 + '10',])
-	
-	
-	plot_onehour_noise(np.array([path0,]), cad = 1800, sector=1, sysnoise=0)	
-	plot_pixinaperture(path0, sector=1)	
-	plot_mag_dist(path0, sector=1)
-	
-	
->>>>>>> Stashed changes
