@@ -338,7 +338,9 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
+	fig.savefig(os.path.join(save_path, 'rms_noise.pdf'), bb_inches='tight')
 	fig.savefig(os.path.join(save_path, 'rms_noise.png'), bb_inches='tight')
+	fig2.savefig(os.path.join(save_path, 'mvd_noise.pdf'), bb_inches='tight')
 	fig2.savefig(os.path.join(save_path, 'mvd_noise.png'), bb_inches='tight')
 
 	plt.show()
@@ -396,6 +398,7 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	save_path = 'plots/sector%02d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
+	fig.savefig(os.path.join(save_path, 'pix_in_aperture.pdf'), bb_inches='tight')
 	fig.savefig(os.path.join(save_path, 'pix_in_aperture.png'), bb_inches='tight')
 
 	plt.show()
@@ -458,6 +461,7 @@ def plot_mag_dist(data_path, sector):
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
 
+	fig.savefig(os.path.join(save_path, 'magnitudes.pdf'), bb_inches='tight')
 	fig.savefig(os.path.join(save_path, 'magnitudes.png'), bb_inches='tight')
 	plt.show()
 
