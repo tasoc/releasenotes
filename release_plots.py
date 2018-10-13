@@ -320,19 +320,12 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
-
-	###########
-	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
-	ax2.set_ylabel('point-to-point MDV (ppm)', fontsize=16, labelpad=10)
-	ax.tick_params(direction='out', which='both', pad=5, length=3)
-	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
-
 	ax.yaxis.set_ticks_position('both')
 
 	###########
-	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
-	ax2.set_ylabel(r'$\rm point-to-point\,\, MDV\,\, (ppm)$', fontsize=16, labelpad=10)
 	ax2.set_xlim([3.5, 16.5])
+	ax2.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
+	ax2.set_ylabel('point-to-point MDV (ppm)', fontsize=16, labelpad=10)
 	ax2.set_yscale("log", nonposy='clip')
 	ax2.xaxis.set_major_locator(MultipleLocator(2))
 	ax2.xaxis.set_minor_locator(MultipleLocator(1))
@@ -417,23 +410,17 @@ def plot_mag_dist(data_path, sector):
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
-	# Add data values
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-
 	tmag_vals_sc = np.array([])
 	tmag_vals_lc = np.array([])
-	for i, f in enumerate(files):
-		hdu = fits.open(f)
-		tmag = hdu[0].header['TESSMAG']
-		#time = hdu[1].data['TIME']
+	for f in files:
+		with fits.open(f) as hdu:
+			tmag = hdu[0].header['TESSMAG']
+			dt = hdu[1].header['TIMEDEL'] * 86400
 
-		dt = hdu[1].header['TIMEDEL'] * 86400
-
-		if dt < 1000:
-			tmag_vals_sc = np.append(tmag_vals_sc, tmag)
-		else:
-			tmag_vals_lc = np.append(tmag_vals_lc, tmag)
-
+			if dt < 1000:
+				tmag_vals_sc = np.append(tmag_vals_sc, tmag)
+			else:
+				tmag_vals_lc = np.append(tmag_vals_lc, tmag)
 
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
