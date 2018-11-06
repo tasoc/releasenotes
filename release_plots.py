@@ -43,7 +43,7 @@ def ZLnoise(gal_lat):
 
 def Pixinaperture(Tmag):
     # Approximate relation for pixels in aperture (based on plot in Sullivan et al.)
-    pixels = (30 + (((3-30)/(14-7)) * (Tmag-7)))*(Tmag<14) + 3*(Tmag>=14) #+ np.random.normal(0, 2)
+    pixels = (30 + (((3-30)/(14-7)) * (Tmag-7)))*(Tmag<14) + 3*(Tmag>=14) 
     return int(np.max([pixels, 3]))
 
 def mean_flux_level(Tmag, Teff):
@@ -180,9 +180,21 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 
 #	cols = np.array(['r', 'b', 'c', 'g', 'm'])
 
+	# Add data values
+	
+	
 	for k, d in enumerate(data_paths):
+		
+		files = np.array([])
+		for root, dirs, fil in os.walk(d):
+			for file in fil:
+				file_path = root + os.sep + file
+				if ('corr' in file_path) and ('.fits' in file_path):
+					print(file_path)
+					files = np.append(files, file_path)
+					
 #		files = np.append(files, np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')]))
-		files = np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits.gz')])
+#		files = np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits.gz')])
 
 		print(k, d)
 #		if k==0:
@@ -307,7 +319,7 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 #	plt.tight_layout()
 
 	save_path = 'plots/sector%02d/' %sector
-	save_path2 = '../releasenote_tex/Release_note%i/' %sector-1
+	save_path2 = '../releasenote_tex/Release_note%1d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
 		
@@ -333,7 +345,15 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	ax = fig.add_subplot(111)
 
 	# Add data values
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
+#	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
+	files = np.array([])
+	for root, dirs, fil in os.walk(data_path):
+		for file in fil:
+			file_path = root + os.sep + file
+			if ('corr' in file_path) and ('.fits' in file_path):
+				print(file_path)
+				files = np.append(files, file_path)
+
 
 	ap_tmag_vals = np.zeros([len(files), 2])
 	for i, f in enumerate(files):
@@ -371,7 +391,7 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	plt.tight_layout()
 
 	save_path = 'plots/sector%02d/' %sector
-	save_path2 = '../releasenote_tex/Release_note%i/' %sector-1
+	save_path2 = '../releasenote_tex/Release_note%1d/' %sector
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
 	fig.savefig(os.path.join(save_path, 'pix_in_aperture.pdf'), bb_inches='tight')
@@ -390,14 +410,23 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 def plot_mag_dist(data_path, sector):
 
 	# Add data values
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-
+	files = np.array([])
+	for root, dirs, fil in os.walk(data_path):
+		for file in fil:
+			file_path = root + os.sep + file
+			if ('corr' in file_path) and ('.fits' in file_path):
+				print(file_path)
+				files = np.append(files, file_path)
+		
+		
 	tmag_vals_sc = np.array([])
 	tmag_vals_lc = np.array([])
 	for f in files:
 		with fits.open(f) as hdu:
 			tmag = hdu[0].header['TESSMAG']
 			dt = hdu[1].header['TIMEDEL'] * 86400
+			
+			print(tmag, dt)
 
 			if dt < 1000:
 				tmag_vals_sc = np.append(tmag_vals_sc, tmag)
@@ -449,7 +478,8 @@ def plot_mag_dist(data_path, sector):
 
 
 	save_path = 'plots/sector%02d/' %sector
-	save_path2 = '../releasenote_tex/Release_note%i/' %sector-1
+	save_path2 = '../releasenote_tex/Release_note%1d/' %sector
+	
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
 
@@ -574,23 +604,14 @@ if __name__ == "__main__":
 
 	plt.close('all')
 
-#	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
-	path0 = r'C:\Users\au195407\Downloads\Ny mappe'
+	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TASOC_code/Release_data/Sector2/output/tpf/'
+#	path0 = r'C:\Users\au195407\Downloads\Ny mappe'
 #	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
 	#data_paths = np.array([path0 + '10',]
 
-	plot_onehour_noise([path0], cad=1800, sector=1, sysnoise=0)
-	plot_pixinaperture(path0, sector=1)
-	plot_mag_dist(path0, sector=1)
+	plot_onehour_noise([path0], cad=1800, sector=2, sysnoise=0)
+	plot_pixinaperture(path0, sector=2)
+	plot_mag_dist(path0, sector=2)
 #	data_path = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
-	
-	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TDA5/S01_DR00_v01'
-#	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
-#	data_paths = np.array([path0 + '10',])
-	
-	
-	plot_onehour_noise(np.array([path0,]), cad = 1800, sector=1, sysnoise=0)	
-	plot_pixinaperture(path0, sector=1)	
-	plot_mag_dist(path0, sector=1)
-	
+
 	
