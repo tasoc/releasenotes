@@ -694,13 +694,13 @@ def plot_mag_dist(data_path, sector, version=1, savetex=False):
 	ax.plot(kde_all.support, kde_all.density*len(tmag_all), 'k-', lw=1.5, label='All')
 
 	
-	try:
-		kde_sc = KDE(tmag_vals_sc)
-		kde_sc.fit(gridsize=1000)
-		ax.plot(kde_sc.support, kde_sc.density*len(tmag_vals_sc), label='SC')
-		ax.scatter(tmag_vals_sc, np.zeros_like(tmag_vals_sc), lw=1, marker='+', s=80)
-	except:
-		pass		
+#	try:
+#		kde_sc = KDE(tmag_vals_sc)
+#		kde_sc.fit(gridsize=1000)
+#		ax.plot(kde_sc.support, kde_sc.density*len(tmag_vals_sc), label='SC')
+#		ax.scatter(tmag_vals_sc, np.zeros_like(tmag_vals_sc), lw=1, marker='+', s=80)
+#	except:
+#		pass		
 	
 #	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim(ymin=0)
@@ -853,10 +853,10 @@ if __name__ == "__main__":
 #	data_paths = np.array([path0 + '08', path0 + '09', path0 + '10', path0 + '11', path0 + '12'])
 	#data_paths = np.array([path0 + '10',]
 
-	plot_bg([path1], cad=1800, sector=2, version=1, sysnoise=0, savetex=False)
-	plot_noice_lc([path1], cad=1800, sector=2, version=1, sysnoise=0, savetex=False)
-	plot_onehour_noise([path0, path1], cad=1800, sector=2, version=1, sysnoise=0, savetex=True, labels=np.array(['Sector 1', 'Sector 2']))
-	plot_pixinaperture([path0, path1], sector=2, version=1, savetex=True, labels=np.array(['Sector 1', 'Sector 2']))
-	plot_mag_dist(path1, sector=2, version=1, savetex=False)
+#	plot_bg([path1], cad=1800, sector=2, version=1, sysnoise=0, savetex=False)
+#	plot_noice_lc([path1], cad=1800, sector=2, version=1, sysnoise=0, savetex=False)
+#	plot_onehour_noise([path0, path1], cad=1800, sector=2, version=1, sysnoise=0, savetex=True, labels=np.array(['Sector 1', 'Sector 2']))
+#	plot_pixinaperture([path0, path1], sector=2, version=1, savetex=True, labels=np.array(['Sector 1', 'Sector 2']))
+	plot_mag_dist(path0, sector=1, version=2, savetex=False)
 
 	
