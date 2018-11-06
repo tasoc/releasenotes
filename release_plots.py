@@ -183,7 +183,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	for k, d in enumerate(data_paths):
 #		files = np.append(files, np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits')]))
 		files = np.array([os.path.join(d, f) for f in os.listdir(d) if f.endswith('.fits.gz')])
-<<<<<<< Updated upstream
 
 		print(k, d)
 #		if k==0:
@@ -216,36 +215,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 				PARAM['RA'] = hdu[0].header['RA_OBJ']
 				PARAM['DEC'] = hdu[0].header['DEC_OBJ']
 
-		print(k, d)
-#		if k==0:
-#			tot_rms_tmag_vals = np.zeros([len(files), 6])
-
-		rms_tmag_vals = np.zeros([len(files), 6])
-		for i, f in enumerate(files):
-			hdu = fits.open(f)
-			tmag = hdu[0].header['TESSMAG']
-			flux = hdu[1].data['FLUX_CORR']
-
-			rms_tmag_vals[i, 0] = tmag
-			rms_tmag_vals[i, -1] = hdu[0].header['TICID']
-
-
-			if hdu[1].header.get('NUM_FRM',60)==60:
-				rms, ptp = compute_onehour_rms(flux, 120)
-				rms_tmag_vals[i, 1] = rms
-				rms_tmag_vals[i, 3] = ptp
-
-#				tot_rms_tmag_vals[i,k+1] = rms
-#				tot_rms_tmag_vals[i,k+1] = np.nanmedian(np.diff(flux))
-			else:
-				rms, ptp = compute_onehour_rms(flux, 1800)
-				rms_tmag_vals[i, 2] = rms
-				rms_tmag_vals[i, 4] = ptp
-
-
-			# TODO: Update elat+elon based on observing sector?
-			PARAM['RA']=hdu[0].header['RA_OBJ']
-			PARAM['DEC']=hdu[0].header['DEC_OBJ']
 
 
 		idx_sc = np.nonzero(rms_tmag_vals[:, 1])
@@ -253,9 +222,7 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 
 		rgba_color = scalarMap.to_rgba(k)
 
-=======
-		
->>>>>>> Stashed changes
+
 		ax.scatter(rms_tmag_vals[idx_sc, 0], rms_tmag_vals[idx_sc, 1], marker='o', facecolors='None', edgecolor=rgba_color)
 		ax.scatter(rms_tmag_vals[idx_lc, 0], rms_tmag_vals[idx_lc, 2], marker='s', facecolors='None', edgecolor=rgba_color)
 
@@ -266,7 +233,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	mags = np.linspace(3.5, 16.5, 50)
 	vals = np.zeros([len(mags), 4])
 	vals2 = np.zeros([len(mags), 4])
-<<<<<<< Updated upstream
 
 #	print(tot_rms_tmag_vals)
 
@@ -323,7 +289,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax.set_ylabel(r'$\rm RMS\,\, (ppm\,\, hr^{-1})$', fontsize=16, labelpad=10)
 	ax.xaxis.set_major_locator(MultipleLocator(2))
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
-<<<<<<< Updated upstream
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
 	ax.yaxis.set_ticks_position('both')
@@ -335,7 +300,6 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 	ax2.set_yscale("log", nonposy='clip')
 	ax2.xaxis.set_major_locator(MultipleLocator(2))
 	ax2.xaxis.set_minor_locator(MultipleLocator(1))
-<<<<<<< Updated upstream
 	ax2.tick_params(direction='out', which='both', pad=5, length=3)
 	ax2.tick_params(which='major', pad=6, length=5,labelsize='15')
 	ax2.yaxis.set_ticks_position('both')
@@ -343,12 +307,19 @@ def plot_onehour_noise(data_paths, sector, cad=1800, sysnoise=0):
 #	plt.tight_layout()
 
 	save_path = 'plots/sector%02d/' %sector
+	save_path2 = '../releasenote_tex/Release_note%i/' %sector-1
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
+		
 	fig.savefig(os.path.join(save_path, 'rms_noise.pdf'), bb_inches='tight')
 	fig.savefig(os.path.join(save_path, 'rms_noise.png'), bb_inches='tight')
 	fig2.savefig(os.path.join(save_path, 'mvd_noise.pdf'), bb_inches='tight')
 	fig2.savefig(os.path.join(save_path, 'mvd_noise.png'), bb_inches='tight')
+	
+	fig.savefig(os.path.join(save_path2, 'rms_noise.pdf'), bb_inches='tight')
+	fig.savefig(os.path.join(save_path2, 'rms_noise.png'), bb_inches='tight')
+	fig2.savefig(os.path.join(save_path2, 'mvd_noise.pdf'), bb_inches='tight')
+	fig2.savefig(os.path.join(save_path2, 'mvd_noise.png'), bb_inches='tight')
 
 	plt.show()
 
@@ -364,14 +335,6 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
-	# Add data values
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-
-=======
-	# Add data values	
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-	
->>>>>>> Stashed changes
 	ap_tmag_vals = np.zeros([len(files), 2])
 	for i, f in enumerate(files):
 		hdu = fits.open(f)
@@ -402,17 +365,20 @@ def plot_pixinaperture(data_path, sector, cad=1800, sysnoise=0):
 	ax.xaxis.set_minor_locator(MultipleLocator(1))
 	ax.yaxis.set_major_locator(MultipleLocator(20))
 	ax.yaxis.set_minor_locator(MultipleLocator(10))
-<<<<<<< Updated upstream
 	ax.tick_params(direction='out', which='both', pad=5, length=3)
 	ax.tick_params(which='major', pad=6, length=5,labelsize='15')
 	ax.yaxis.set_ticks_position('both')
 	plt.tight_layout()
 
 	save_path = 'plots/sector%02d/' %sector
+	save_path2 = '../releasenote_tex/Release_note%i/' %sector-1
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
 	fig.savefig(os.path.join(save_path, 'pix_in_aperture.pdf'), bb_inches='tight')
 	fig.savefig(os.path.join(save_path, 'pix_in_aperture.png'), bb_inches='tight')
+	
+	fig.savefig(os.path.join(save_path2, 'pix_in_aperture.pdf'), bb_inches='tight')
+	fig.savefig(os.path.join(save_path2, 'pix_in_aperture.png'), bb_inches='tight')
 
 	plt.show()
 
@@ -426,17 +392,6 @@ def plot_mag_dist(data_path, sector):
 	# Add data values
 	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
 
-<<<<<<< HEAD
-	# Add data values
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-
-=======
-	# Add data values	
-	files = np.array([os.path.join(data_path, f) for f in os.listdir(data_path) if f.endswith('.fits.gz')])
-	
->>>>>>> Stashed changes
-=======
->>>>>>> master
 	tmag_vals_sc = np.array([])
 	tmag_vals_lc = np.array([])
 	for f in files:
@@ -455,7 +410,6 @@ def plot_mag_dist(data_path, sector):
 	if len(tmag_vals_lc) > 0:
 		kde_lc = KDE(tmag_vals_lc)
 		kde_lc.fit(gridsize=1000)
-<<<<<<< Updated upstream
 		ax.fill_between(kde_lc.support, 0, kde_lc.density*len(tmag_vals_lc), color='b', alpha=0.3, label='1800s')
 		ax.scatter(tmag_vals_lc, np.zeros_like(tmag_vals_lc), lw=1, marker='|', c='k', s=80)
 
@@ -470,12 +424,6 @@ def plot_mag_dist(data_path, sector):
 	kde_all.fit(gridsize=1000)
 	ax.plot(kde_all.support, kde_all.density*len(tmag_all), 'k-', lw=1.5, label='All')
 
-=======
-		ax.plot(kde_lc.support, kde_lc.density*len(tmag_vals_lc), label='LC')
-		ax.scatter(tmag_vals_lc, np.zeros_like(tmag_vals_lc), lw=1, marker='+', s=80)
-	except:
-		pass
-	
 	
 	try:
 		kde_sc = KDE(tmag_vals_sc)
@@ -485,7 +433,6 @@ def plot_mag_dist(data_path, sector):
 	except:
 		pass		
 	
->>>>>>> Stashed changes
 #	ax.set_xlim([3.5, 16.5])
 	ax.set_ylim(ymin=0)
 	ax.set_xlabel('TESS magnitude', fontsize=16, labelpad=10)
@@ -500,19 +447,21 @@ def plot_mag_dist(data_path, sector):
 
 	ax.yaxis.set_ticks_position('both')
 
->>>>>>> Stashed changes
 
 	save_path = 'plots/sector%02d/' %sector
+	save_path2 = '../releasenote_tex/Release_note%i/' %sector-1
 	if not os.path.exists(save_path):
 		os.makedirs(save_path)
-<<<<<<< Updated upstream
-=======
-	fig.savefig(os.path.join(save_path, 'magnitudes.png') )
-	
->>>>>>> Stashed changes
 
+	fig.savefig(os.path.join(save_path, 'magnitudes.png') )
 	fig.savefig(os.path.join(save_path, 'magnitudes.pdf'), bb_inches='tight')
 	fig.savefig(os.path.join(save_path, 'magnitudes.png'), bb_inches='tight')
+	
+	fig.savefig(os.path.join(save_path2, 'magnitudes.png') )
+	fig.savefig(os.path.join(save_path2, 'magnitudes.pdf'), bb_inches='tight')
+	fig.savefig(os.path.join(save_path2, 'magnitudes.png'), bb_inches='tight')
+	
+	
 	plt.show()
 
 # =============================================================================
@@ -633,7 +582,6 @@ if __name__ == "__main__":
 	plot_onehour_noise([path0], cad=1800, sector=1, sysnoise=0)
 	plot_pixinaperture(path0, sector=1)
 	plot_mag_dist(path0, sector=1)
-=======
 #	data_path = '/home/mikkelnl/ownCloud/Documents/Asteroseis/Emil/TESS_alerts/'
 	
 	path0 = '/home/mikkelnl/ownCloud/Documents/Asteroseis/TESS/TDA5/S01_DR00_v01'
@@ -646,4 +594,3 @@ if __name__ == "__main__":
 	plot_mag_dist(path0, sector=1)
 	
 	
->>>>>>> Stashed changes
